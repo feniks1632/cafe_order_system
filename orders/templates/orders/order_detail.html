@@ -1,0 +1,44 @@
+{% extends "orders/base.html" %}
+
+{% block orders_content %}
+<div class="container">
+    <h2 class="mb-4">Детали заказа № {{ order.id }}</h2>
+
+    <!-- Карточка с деталями заказа -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Информация о заказе</h5>
+            <p class="card-text"><strong>Номер стола:</strong> {{ order.table_number }}</p>
+            <p class="card-text"><strong>Статус:</strong> {{ order.get_status_display }}</p>
+            <p class="card-text"><strong>Общая стоимость:</strong> {{ order.total_price }} руб.</p>
+        </div>
+    </div>
+
+    <!-- Карточка с блюдами -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Блюда</h5>
+            <ul class="list-group list-group-flush">
+                {% for item in order.items %}
+                <li class="list-group-item">
+                    {{ item.name }} - {{ item.price }} руб.
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Кнопки действий -->
+    <div class="actions mb-4">
+        <a href="{% url 'orders:order_edit' pk=order.pk %}" class="btn btn-primary me-2">
+            <i class="fas fa-edit"></i> Редактировать заказ
+        </a>
+        <a href="{% url 'orders:order_delete' order.pk %}" class="btn btn-danger me-2">
+            <i class="fas fa-trash"></i> Удалить
+        </a>
+        <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад к списку заказов
+        </a>
+    </div>
+</div>
+{% endblock %}

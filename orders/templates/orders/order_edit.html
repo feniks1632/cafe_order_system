@@ -1,0 +1,93 @@
+{% extends 'orders/base.html' %}
+
+{% load static %}
+{% load custom_filters %}
+
+{% block orders_content %}
+<div class="container">
+    <h2 class="mb-4">Редактирование заказа</h2>
+
+    <!-- Отображение сообщений об ошибках -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" id="order-form" class="mb-4">
+        {% csrf_token %}
+
+        <!-- Отображение всех полей формы -->
+        <div class="mb-3">
+            {{ form.as_p }}
+        </div>
+
+        <!-- Отображение старых блюд -->
+        <div id="dishes" class="mb-3">
+            {% for dish in dishes %}
+            <div class="dish card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="id_dish_name_{{ forloop.counter0 }}" class="form-label">
+                                Название блюда {{ forloop.counter }}:
+                            </label>
+                            <input type="text" name="dish_name_{{ forloop.counter0 }}"
+                                id="id_dish_name_{{ forloop.counter0 }}" class="form-control" value="{{ dish.name }}"
+                                readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="id_dish_price_{{ forloop.counter0 }}" class="form-label">
+                                Цена {{ forloop.counter }}:
+                            </label>
+                            <input type="number" name="dish_price_{{ forloop.counter0 }}"
+                                id="id_dish_price_{{ forloop.counter0 }}" class="form-control"
+                                value="{{ dish.price|format_price }}" step="0.01" readonly>
+                        </div>
+                        <div class="col-md-2">
+                            <p class="text-danger mt-3">Вы не можете изменить уже заказанные позиции.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Кнопка для добавления нового блюда -->
+        <div class="mb-3">
+            <button type="button" id="add-dish" class="btn btn-secondary">
+                <i class="fas fa-plus"></i> Добавить блюдо
+            </button>
+        </div>
+
+        <!-- Поля для новых блюд -->
+        <div id="new-dishes" class="mb-3"></div>
+
+        <!-- Кнопки для сохранения и удаления заказа -->
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Сохранить
+            </button>
+            <a href="{% url 'orders:order_delete' order.pk %}" class="btn btn-danger"
+                onclick="return confirm('Вы уверены, что хотите удалить этот заказ?');">
+                <i class="fas fa-trash"></i> Удалить заказ
+            </a>
+        </div>
+    </form>
+
+    <!-- Кнопка "Назад к списку заказов" -->
+    <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Назад к списку заказов
+    </a>
+</div>
+
+<!-- JavaScript -->
+{{ dishes|json_script:"dishes-data" }}
+<script src="{% static 'orders/js/orders.js' %}"></script>
+{% endblock %}

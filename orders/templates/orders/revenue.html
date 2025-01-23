@@ -1,0 +1,20 @@
+{% extends "orders/base.html" %}
+
+{% block orders_content %}
+<div class="container">
+    <h2 class="mb-4">Выручка за смену</h2>
+
+    <!-- Карточка с общей выручкой -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Общая выручка</h5>
+            <p class="card-text display-4">{{ total_revenue }} руб.</p>
+        </div>
+    </div>
+
+    <!-- Кнопка "Назад к списку заказов" -->
+    <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Назад к списку заказов
+    </a>
+</div>
+{% endblock %}

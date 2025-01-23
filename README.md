@@ -3,8 +3,8 @@
 [![Python](https://img.shields.io/badge/-Python-464646?style=flat-square&logo=Python)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/-Django-464646?style=flat-square&logo=Django)](https://www.djangoproject.com/)
 [![Django REST Framework](https://img.shields.io/badge/-Django%20REST%20Framework-464646?style=flat-square&logo=Django%20REST%20Framework)](https://www.django-rest-framework.org/)
-[![JavaScript](https://img.shields.io/badge/-https://learn.javascript.ru/)
-[![bootstrap](https://img.shields.io/badge/-https://bootstrap-4.ru/)
+[![JavaScript](https://img.shields.io/badge/-JavaScript-464646?style=flat-square&logo=JavaScript)](https://learn.javascript.ru/)
+[![Bootstrap](https://img.shields.io/badge/-Bootstrap-464646?style=flat-square&logo=Bootstrap)](https://getbootstrap.com/)
 
 Приложение для управления заказами в кафе, позволяющее эффективно отслеживать и управлять заказами. Система предоставляет удобный интерфейс для создания, редактирования и удаления заказов, а также мощные инструменты для поиска и анализа данных.
 
@@ -96,7 +96,8 @@ Redoc: http://localhost:8000/redoc/
 Удаление заказа: DELETE /api/orders/<id>/
 
 Тестирование 🧪
-Для обеспечения качества кода написаны unit-тесты, покрывающие основные функции приложения. Запустите тесты с помощью команды:(из корневой директории где файл manage.py)
+
+Для обеспечения качества кода написаны тесты, покрывающие основные функции приложения. Запустите тесты с помощью команды:(из корневой директории где файл manage.py)
 
 bash
 ```

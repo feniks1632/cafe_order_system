@@ -104,6 +104,9 @@ bash
 pytest
 ```
 Разработано с ❤️ для эффективного управления заказами в кафе. Если у вас есть вопросы или предложения, не стесняйтесь связаться со мной!
-telegram = @HovardLarson
-vk = https://vk.com/feniks1632
+
+
+Мой telegram = @HovardLarson
+
+Мой vk = https://vk.com/feniks1632
 

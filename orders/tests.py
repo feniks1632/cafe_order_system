@@ -1,11 +1,12 @@
+from django.contrib.messages.storage.fallback import FallbackStorage
 from unittest.mock import patch
 from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 import pytest
 
 from api.serializers import OrderSerializer
-from orders.services import OrderService
-from .models import Order
+from orders.services import OrderService, WorkerOrderService
+from .models import Order, Worker
 
 
 """Тесты для Модели"""
@@ -79,7 +80,7 @@ class OrderModelTest(TestCase):
 
 
 
-"""Тесты для Вью и сервисов"""
+"""Тесты для сервисного слоя"""
 
 class OrderCreateTest(TestCase):
     def setUp(self):
@@ -189,6 +190,7 @@ class OrderUpdateTest(TestCase):
         self.assertEqual(updated_order.total_price, 8.00)
         self.assertEqual(updated_order.status, 'ready')
 
+
 class OrderDetailViewTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -246,6 +248,7 @@ class OrderDeleteViewTest(TestCase):
         response = self.client.post(reverse('orders:order_delete', args=[self.order.pk]))
         self.assertEqual(response.status_code, 302)  # Проверяем редирект
         self.assertEqual(Order.objects.count(), 0)  # Проверяем, что заказ удален
+
 
 
 """Тесты для Сериализатора"""
@@ -438,3 +441,5 @@ class OrderSerializerTest(TestCase):
             self.assertEqual(updated_order.items, [{"name": "Coffee", "price": 5.00}, {"name": "Tea", "price": 3.00}])  # Новое блюдо добавлено
             self.assertEqual(updated_order.total_price, 8.00)  # total_price пересчитан
             self.assertEqual(updated_order.status, 'ready')  # Статус обновлен
+
+

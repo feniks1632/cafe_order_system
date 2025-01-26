@@ -1,6 +1,8 @@
 from django.db import models
+from django.contrib.auth.hashers import make_password, check_password
 from django.core.validators import MinValueValidator
-        
+
+
 class Order(models.Model):
     STATUS_CHOICES = [
         ('waiting', 'В ожидании'),
@@ -45,3 +47,35 @@ class Order(models.Model):
     class Meta:
         verbose_name = "Заказ"
         verbose_name_plural = "Заказы"
+
+
+class Worker(models.Model):
+    identifier = models.CharField(
+        verbose_name=" Уникальный идентификационный номер",
+        max_length=8,
+        unique=True
+    )
+
+    password = models.CharField(
+        verbose_name="Пароль",
+        max_length=20,
+    )
+
+    def set_password(self, raw_password):
+        """
+        Хешируем пароль перед сохранением
+        """
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        """
+        Проверяем пароль
+        """
+        return check_password(raw_password, self.password)
+    
+    def __str__(self) -> str:
+        return f"Worker {self.identifier}"
+    
+    class Meta:
+        verbose_name = "Работник"
+        verbose_name_plural = "Работники"

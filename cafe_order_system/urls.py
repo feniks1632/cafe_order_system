@@ -5,6 +5,7 @@ from drf_yasg import openapi
 from django.urls import path, include
 
 
+# Swagger(API) Документация
 schema_view = get_schema_view(
     openapi.Info(
         title="Cafe Order API",

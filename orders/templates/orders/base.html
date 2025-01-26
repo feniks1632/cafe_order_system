@@ -18,11 +18,13 @@
                             Список заказов
                         </a>
                     </li>
+                    {% if request.session.worker_id %}
                     <li class="nav-item">
                         <a class="nav-link text-dark" href="{% url 'orders:revenue' %}">
                             Выручка
                         </a>
                     </li>
+                    {% endif %}
                 </ul>
             </div>
         </aside>

@@ -13,4 +13,6 @@ urlpatterns = [
     path('order/<int:pk>/edit/', views.order_update, name='order_edit'),  # Редактирование заказа
     path('order/<int:pk>/delete/', views.order_delete, name='order_delete'),  # Удаление заказа
     path('revenue/', views.revenue, name='revenue'),  # Доходы
+    path('worker/login/', views.worker_login, name='worker_login'),  # Авторизация работника
+    path('worker/logout/', views.worker_logout, name='worker_logout'),  # Выход работника
 ]

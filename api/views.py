@@ -1,9 +1,18 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework import viewsets, filters
 
 from orders.models import Order
 
 from .serializers import OrderSerializer
+
+
+class IsWorker(BasePermission):
+    """
+    Проверка, что пользователь является работником.
+    """
+    def has_permission(self, request, view):
+        return request.user.is_worker
 
 
 class OrderViewSet(viewsets.ModelViewSet):

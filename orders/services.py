@@ -1,8 +1,8 @@
 from django.contrib import messages
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import OrderForm, OrderSearchForm
-from .models import Order
+from .forms import OrderForm, OrderSearchForm, WorkerLoginForm
+from .models import Order, Worker
 
 
 class OrderService:
@@ -20,6 +20,8 @@ class OrderService:
         Если переданы existing_items, исключает дубликаты.
         """
         items = []
+        
+        # Обработка существующих блюд
         i = 0
         while f'dish_name_{i}' in request.POST:
             name = request.POST[f'dish_name_{i}']
@@ -32,6 +34,21 @@ class OrderService:
                 ):
                     items.append({'name': name, 'price': float(price)})
             i += 1
+
+        # Обработка новых блюд
+        j = 0
+        while f'new_dish_name_{j}' in request.POST:
+            name = request.POST[f'new_dish_name_{j}']
+            price = request.POST[f'new_dish_price_{j}']
+            if name and price:  # Проверяем, что поля не пустые
+                # Проверяем, что блюдо ещё не добавлено
+                if not existing_items or not any(
+                    item['name'] == name and item['price'] == float(price) 
+                    for item in existing_items
+                ):
+                    items.append({'name': name, 'price': float(price)})
+            j += 1
+
         return items
 
     @staticmethod
@@ -81,7 +98,7 @@ class OrderService:
         return order
     
     @staticmethod
-    def handle_order_request(request, order=None, template_name=None, redirect_view=None) -> render:
+    def handle_order_request(request, order=None, template_name=None, redirect_view=None):
         """
         Обрабатывает запросы для создания или обновления заказа.
         """
@@ -94,26 +111,18 @@ class OrderService:
                     else:
                         order = OrderService.create_order_from_request(request, form.cleaned_data)
                     
-                    # Проверяем, что order не равен None
                     if order is None:
                         raise ValueError("Не удалось создать или обновить заказ.")
                     
                     return redirect(redirect_view, pk=order.pk)
                 except ValueError as e:
                     messages.error(request, str(e))
-                    return render(request, template_name, {
-                        'form': form,
-                        'dishes': order.items if order else [],
-                        'bussy_tables': OrderService.get_occupied_tables(),
-                        'order': order,
-                    })
         else:
             form = OrderForm(instance=order)
 
         return render(request, template_name, {
             'form': form,
             'dishes': order.items if order else [],
-            'bussy_tables': OrderService.get_occupied_tables(),
             'order': order,
         })
 
@@ -137,7 +146,67 @@ class OrderService:
             'search_form': form,
             'search_performed': search_performed,  # Передаём флаг в шаблон
         })
-    
+
+
+"""Логика работы с заказами для работника"""
+class WorkerOrderService(OrderService):
+    @staticmethod
+    def worker_update_order_from_request(request, order, template_name=None, redirect_view=None):
+        if request.method == 'POST':
+            if not request.session.get('worker_id'):
+                messages.error(request, "Вы не авторизованы как работник.")
+                return redirect('orders:worker_login')
+
+            form = OrderForm(request.POST, instance=order)
+            if form.is_valid():
+                try:
+                    # Получаем индексы блюд для удаления
+                    remove_indices = request.POST.get('remove_dishes', '').split(',')
+                    remove_indices = [int(idx) for idx in remove_indices if idx.strip()]
+
+                    # Удаляем блюда по индексам
+                    if remove_indices:
+                        order.items = [item for idx, item in enumerate(order.items) if idx not in remove_indices]
+
+                    # Обрабатываем новые блюда
+                    new_items = OrderService.process_dishes(request, existing_items=order.items)
+                    if new_items:
+                        order.items.extend(new_items)
+
+                    # Проверяем, что в заказе есть хотя бы одна позиция
+                    if not order.items:
+                        raise ValueError('В заказе должна быть хотя бы одна позиция.')
+                    
+                    # Обновляем данные заказа
+                    order.table_number = form.cleaned_data.get('table_number')
+                    order.status = form.cleaned_data.get('status')  # Обновляем статус
+                    order.total_price = sum(item['price'] for item in order.items)
+
+                    # Сохраняем заказ
+                    order.save(update_fields=['items', 'table_number', 'total_price', 'status'])  # Явно указываем поля для обновления
+                    messages.success(request, "Заказ успешно обновлен.")
+                    return redirect(redirect_view, pk=order.id)
+                except ValueError as e:
+                    messages.error(request, str(e))
+            else:
+                print("Форма невалидна:", form.errors)
+        else:
+            form = OrderForm(instance=order)
+
+        return render(request, template_name, {
+            'form': form,
+            'order': order,
+            'dishes': order.items,
+        })
+
+    def worker_logout_request(request) -> redirect:
+        """
+        Выход работника из системы.
+        """
+        if 'worker_id' in request.session:
+            del request.session['worker_id']
+        return redirect('orders:order_list')
+
     @staticmethod
     def revenue_request(request) -> render:
         """
@@ -146,3 +215,30 @@ class OrderService:
         paid_orders = Order.objects.filter(status='paid')
         total_revenue = sum(order.total_price for order in paid_orders)
         return render(request, 'orders/revenue.html', {'total_revenue': total_revenue})
+
+    def worker_login_request(request):
+        """
+        Обрабатывает запросы для авторизации работника.
+        """
+        if request.method == 'POST':
+            form = WorkerLoginForm(request.POST)
+            if form.is_valid():
+                identifier = form.cleaned_data['identifier']
+                password = form.cleaned_data['password']
+
+                try:
+                    worker = Worker.objects.get(identifier=identifier)
+                    if worker.check_password(password):
+                        # Сохраняем идентификатор работника в сессии
+                        request.session['worker_id'] = worker.id
+                        request.session['worker_identifier'] = worker.identifier 
+                        messages.success(request, "Вы успешно авторизовались!")
+                        return redirect('orders:order_list')  # Используем именованный URL-адрес
+                    else:
+                        messages.error(request, "Неверный пароль.")
+                except Worker.DoesNotExist:
+                    messages.error(request, "Работник с таким идентификатором не найден.")
+        else:
+            form = WorkerLoginForm()
+
+        return render(request, 'workers/login.html', {'form': form})

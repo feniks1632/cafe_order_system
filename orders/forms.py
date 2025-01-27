@@ -64,3 +64,11 @@ class OrderSearchForm(forms.Form):
 
         # Фильтруем queryset
         return queryset.filter(q_objects)
+    
+
+class WorkerLoginForm(forms.Form):
+    """
+    Форма для авторизации сотрудника.
+    """
+    identifier = forms.CharField(label='Идентификатор')
+    password = forms.CharField(label='Пароль', widget=forms.PasswordInput)    

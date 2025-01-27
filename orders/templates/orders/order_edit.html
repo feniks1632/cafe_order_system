@@ -5,89 +5,206 @@
 
 {% block orders_content %}
 <div class="container">
-    <h2 class="mb-4">Редактирование заказа</h2>
+  <h2 class="mb-4">Редактирование заказа</h2>
 
-    <!-- Отображение сообщений об ошибках -->
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show"
-            role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endfor %}
+  <!-- Отображение сообщений об ошибках -->
+  {% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show"
+      role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
 
-    <form method="post" id="order-form" class="mb-4">
-        {% csrf_token %}
+  <!-- Форма с динамическим action -->
+  <form method="post" id="order-form" class="mb-4" action="{% url 'orders:order_edit' order.pk %}">
+    {% csrf_token %}
 
-        <!-- Отображение всех полей формы -->
-        <div class="mb-3">
-            {{ form.as_p }}
-        </div>
+    <!-- Скрытое поле для хранения индексов блюд, которые нужно удалить -->
+    <input type="hidden" name="remove_dishes" id="remove_dishes" value="">
 
-        <!-- Отображение старых блюд -->
-        <div id="dishes" class="mb-3">
-            {% for dish in dishes %}
-            <div class="dish card mb-3">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label for="id_dish_name_{{ forloop.counter0 }}" class="form-label">
-                                Название блюда {{ forloop.counter }}:
-                            </label>
-                            <input type="text" name="dish_name_{{ forloop.counter0 }}"
-                                id="id_dish_name_{{ forloop.counter0 }}" class="form-control" value="{{ dish.name }}"
-                                readonly>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="id_dish_price_{{ forloop.counter0 }}" class="form-label">
-                                Цена {{ forloop.counter }}:
-                            </label>
-                            <input type="number" name="dish_price_{{ forloop.counter0 }}"
-                                id="id_dish_price_{{ forloop.counter0 }}" class="form-control"
-                                value="{{ dish.price|format_price }}" step="0.01" readonly>
-                        </div>
-                        <div class="col-md-2">
-                            <p class="text-danger mt-3">Вы не можете изменить уже заказанные позиции.</p>
-                        </div>
-                    </div>
-                </div>
+    <!-- Отображение всех полей формы -->
+    <div class="mb-3">
+      {{ form.as_p }}
+    </div>
+
+    <!-- Отображение старых блюд -->
+    <div id="dishes" class="mb-3">
+      {% for dish in dishes %}
+      <div class="dish card mb-3">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <label for="id_dish_name_{{ forloop.counter0 }}" class="form-label">
+                Название блюда {{ forloop.counter }}:
+              </label>
+              <input type="text" name="dish_name_{{ forloop.counter0 }}" id="id_dish_name_{{ forloop.counter0 }}"
+                class="form-control" value="{{ dish.name }}" {% if not request.session.worker_id %}readonly{% endif %}>
+              <small class="form-text text-muted">Можно вводить только буквы и пробелы.</small>
             </div>
-            {% endfor %}
+            <div class="col-md-4">
+              <label for="id_dish_price_{{ forloop.counter0 }}" class="form-label">
+                Цена {{ forloop.counter }}:
+              </label>
+              <input type="number" name="dish_price_{{ forloop.counter0 }}" id="id_dish_price_{{ forloop.counter0 }}"
+                class="form-control" value="{{ dish.price|format_price }}" step="0.01" readonly>
+            </div>
+            <div class="col-md-2">
+              {% if request.session.worker_id %}
+              <!-- Кнопка удаления блюда для работника -->
+              <button type="button" class="btn btn-danger mt-3 remove-dish" data-dish-index="{{ forloop.counter0 }}">
+                <i class="fas fa-trash"></i> Удалить
+              </button>
+              {% else %}
+              <!-- Сообщение для обычного пользователя -->
+              <p class="text-danger mt-3">Вы не можете изменить уже заказанные позиции.</p>
+              {% endif %}
+            </div>
+          </div>
         </div>
+      </div>
+      {% endfor %}
+    </div>
 
-        <!-- Кнопка для добавления нового блюда -->
-        <div class="mb-3">
-            <button type="button" id="add-dish" class="btn btn-secondary">
-                <i class="fas fa-plus"></i> Добавить блюдо
-            </button>
-        </div>
+    <!-- Кнопка для добавления нового блюда -->
+    <div class="mb-3">
+      <button type="button" id="add-dish" class="btn btn-secondary">
+        <i class="fas fa-plus"></i> Добавить блюдо
+      </button>
+    </div>
 
-        <!-- Поля для новых блюд -->
-        <div id="new-dishes" class="mb-3"></div>
+    <!-- Поля для новых блюд -->
+    <div id="new-dishes" class="mb-3"></div>
 
-        <!-- Кнопки для сохранения и удаления заказа -->
-        <div class="mb-3">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Сохранить
-            </button>
-            <a href="{% url 'orders:order_delete' order.pk %}" class="btn btn-danger"
-                onclick="return confirm('Вы уверены, что хотите удалить этот заказ?');">
-                <i class="fas fa-trash"></i> Удалить заказ
-            </a>
-        </div>
-    </form>
+    <!-- Кнопки для сохранения и удаления заказа -->
+    <div class="mb-3">
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i> Сохранить
+      </button>
+      {% if request.session.worker_id %}
+      <a href="{% url 'orders:order_delete' order.pk %}" class="btn btn-danger"
+        onclick="return confirm('Вы уверены, что хотите удалить этот заказ?');">
+        <i class="fas fa-trash"></i> Удалить заказ
+      </a>
+      {% endif %}
+    </div>
+  </form>
 
-    <!-- Кнопка "Назад к списку заказов" -->
-    <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left"></i> Назад к списку заказов
-    </a>
+  <!-- Кнопка "Назад к списку заказов" -->
+  <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary">
+    <i class="fas fa-arrow-left"></i> Назад к списку заказов
+  </a>
 </div>
 
 <!-- JavaScript -->
-{{ dishes|json_script:"dishes-data" }}
-<script src="{% static 'orders/js/orders.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const removeDishesInput = document.getElementById('remove_dishes');
+    const addDishButton = document.getElementById('add-dish');
+    const newDishesContainer = document.getElementById('new-dishes');
+
+    if (!removeDishesInput) {
+      console.error('Элемент remove_dishes не найден.');
+      return;
+    }
+
+    // Делегирование событий для удаления блюд
+    document.addEventListener('click', function (event) {
+      if (event.target.classList.contains('remove-dish')) {
+        const button = event.target;
+        const dishIndex = button.getAttribute('data-dish-index');
+        let removedDishes = removeDishesInput.value ? removeDishesInput.value.split(',') : [];
+
+        // Добавляем индекс блюда в список для удаления
+        if (!removedDishes.includes(dishIndex)) {
+          removedDishes.push(dishIndex);
+          removeDishesInput.value = removedDishes.join(',');
+
+          // Полностью удаляем элемент блюда из DOM
+          const dishElement = button.closest('.dish');
+          if (dishElement) {
+            dishElement.remove(); // Удаляем элемент из DOM
+          } else {
+            console.error('Элемент блюда не найден.');
+          }
+        }
+
+        console.log('Удаляемые блюда:', removeDishesInput.value);
+      }
+    });
+
+    // Добавление новых блюд
+    if (addDishButton && newDishesContainer) {
+      let newDishIndex = 0;
+
+      addDishButton.addEventListener('click', function () {
+        const newDishHTML = `
+                <div class="dish card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="id_new_dish_name_${newDishIndex}" class="form-label">
+                                    Название блюда:
+                                </label>
+                                <input type="text" name="new_dish_name_${newDishIndex}" id="id_new_dish_name_${newDishIndex}"
+                                    class="form-control">
+                                <small class="form-text text-muted">Можно вводить только буквы и пробелы.</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="id_new_dish_price_${newDishIndex}" class="form-label">
+                                    Цена:
+                                </label>
+                                <input type="number" name="new_dish_price_${newDishIndex}" id="id_new_dish_price_${newDishIndex}"
+                                    class="form-control" step="0.01">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger mt-3 remove-new-dish">
+                                    <i class="fas fa-trash"></i> Удалить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        newDishesContainer.insertAdjacentHTML('beforeend', newDishHTML);
+        newDishIndex++;
+      });
+
+      // Обработка удаления новых блюд
+      newDishesContainer.addEventListener('click', function (event) {
+        if (event.target.classList.contains('remove-new-dish')) {
+          const dishElement = event.target.closest('.dish');
+          if (dishElement) {
+            dishElement.remove();
+          }
+        }
+      });
+    } else {
+      console.error('Элементы add-dish или new-dishes не найдены.');
+    }
+
+    // Функция для блокировки ввода цифр и специальных символов
+    function blockInvalidCharacters(event) {
+      const key = event.key; // Получаем нажатую клавишу
+      const regex = /^[a-zA-Zа-яА-Я\s]$/; // Разрешаем только буквы и пробелы
+
+      // Если символ не соответствует regex, блокируем ввод
+      if (!regex.test(key)) {
+        event.preventDefault();
+      }
+    }
+
+    // Делегирование события keydown для всех полей с названием блюда
+    document.addEventListener('keydown', function (event) {
+      if (event.target.matches('input[id^="id_dish_name_"], input[id^="id_new_dish_name_"]')) {
+        blockInvalidCharacters(event);
+      }
+    });
+  });
+</script>
 {% endblock %}

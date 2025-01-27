@@ -139,3 +139,4 @@ CORS_ALLOWED_ORIGINS = [
 
 # Разрешить отправку кук
 CORS_ALLOW_CREDENTIALS = True
+

@@ -28,6 +28,7 @@
             {{ form.as_p }}
         </div>
 
+<<<<<<< Updated upstream
         <!-- Отображение старых блюд -->
         <div id="dishes" class="mb-3">
             {% for dish in dishes %}
@@ -52,6 +53,94 @@
                         </div>
                         <div class="col-md-2">
                             <p class="text-danger mt-3">Вы не можете изменить уже заказанные позиции.</p>
+=======
+    <!-- Кнопки для сохранения и удаления заказа -->
+    <div class="mb-3">
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i> Сохранить
+      </button>
+      {% if request.session.worker_id %}
+      <a href="{% url 'orders:order_delete' order.pk %}" class="btn btn-danger"
+        onclick="return confirm('Вы уверены, что хотите удалить этот заказ?');">
+        <i class="fas fa-trash"></i> Удалить заказ
+      </a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- Кнопка "Назад к списку заказов" -->
+  <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary">
+    <i class="fas fa-arrow-left"></i> Назад к списку заказов
+  </a>
+</div>
+
+<!-- JavaScript -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const removeDishesInput = document.getElementById('remove_dishes');
+    const addDishButton = document.getElementById('add-dish');
+    const newDishesContainer = document.getElementById('new-dishes');
+
+    if (!removeDishesInput) {
+        console.error('Элемент remove_dishes не найден.');
+        return;
+    }
+
+    // Делегирование событий для удаления блюд
+    document.addEventListener('click', function (event) {
+        if (event.target.classList.contains('remove-dish')) {
+            const button = event.target;
+            const dishIndex = button.getAttribute('data-dish-index');
+            let removedDishes = removeDishesInput.value ? removeDishesInput.value.split(',') : [];
+
+            // Добавляем индекс блюда в список для удаления
+            if (!removedDishes.includes(dishIndex)) {
+                removedDishes.push(dishIndex);
+                removeDishesInput.value = removedDishes.join(',');
+
+                // Полностью удаляем элемент блюда из DOM
+                const dishElement = button.closest('.dish');
+                if (dishElement) {
+                    dishElement.remove(); // Удаляем элемент из DOM
+                } else {
+                    console.error('Элемент блюда не найден.');
+                }
+            }
+
+            console.log('Удаляемые блюда:', removeDishesInput.value);
+        }
+    });
+
+    // Добавление новых блюд
+    if (addDishButton && newDishesContainer) {
+        let newDishIndex = 0;
+
+        addDishButton.addEventListener('click', function () {
+            const newDishHTML = `
+                <div class="dish card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="id_new_dish_name_${newDishIndex}" class="form-label">
+                                    Название блюда:
+                                </label>
+                                <input type="text" name="new_dish_name_${newDishIndex}" id="id_new_dish_name_${newDishIndex}"
+                                    class="form-control">
+                                <small class="form-text text-muted">Можно вводить только буквы и пробелы.</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="id_new_dish_price_${newDishIndex}" class="form-label">
+                                    Цена:
+                                </label>
+                                <input type="number" name="new_dish_price_${newDishIndex}" id="id_new_dish_price_${newDishIndex}"
+                                    class="form-control" step="0.01">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger mt-3 remove-new-dish">
+                                    <i class="fas fa-trash"></i> Удалить
+                                </button>
+                            </div>
+>>>>>>> Stashed changes
                         </div>
                     </div>
                 </div>
@@ -59,6 +148,7 @@
             {% endfor %}
         </div>
 
+<<<<<<< Updated upstream
         <!-- Кнопка для добавления нового блюда -->
         <div class="mb-3">
             <button type="button" id="add-dish" class="btn btn-secondary">
@@ -90,4 +180,66 @@
 <!-- JavaScript -->
 {{ dishes|json_script:"dishes-data" }}
 <script src="{% static 'orders/js/orders.js' %}"></script>
+=======
+            newDishesContainer.insertAdjacentHTML('beforeend', newDishHTML);
+
+            // Добавляем обработчики событий для нового поля
+            const newDishInput = document.getElementById(`id_new_dish_name_${newDishIndex}`);
+            if (newDishInput) {
+                newDishInput.addEventListener('keydown', blockInvalidCharacters);
+                newDishInput.addEventListener('paste', handlePaste);
+            }
+
+            newDishIndex++;
+        });
+    } else {
+        console.error('Элементы add-dish или new-dishes не найдены.');
+    }
+
+    // Функция для блокировки ввода цифр и специальных символов
+    function blockInvalidCharacters(event) {
+        const key = event.key; // Получаем нажатую клавишу
+        const regex = /^[a-zA-Zа-яА-Я\s]$/; // Разрешаем только буквы и пробелы
+
+        // Разрешаем служебные клавиши (Backspace, Delete, стрелки и т.д.)
+        const allowedKeys = [
+            'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+            'Tab', 'Home', 'End', 'Enter'
+        ];
+
+        // Если символ не соответствует regex и это не служебная клавиша, блокируем ввод
+        if (!regex.test(key) && !allowedKeys.includes(key)) {
+            event.preventDefault();
+        }
+    }
+
+    // Функция для обработки вставки текста
+    function handlePaste(event) {
+        event.preventDefault(); // Отменяем стандартное поведение вставки
+
+        // Получаем текст из буфера обмена
+        const pasteText = (event.clipboardData || window.clipboardData).getData('text');
+
+        // Очищаем текст от недопустимых символов
+        const cleanedText = pasteText.replace(/[^a-zA-Zа-яА-Я\s]/g, '');
+
+        // Вставляем очищенный текст в поле
+        const target = event.target;
+        const startPos = target.selectionStart;
+        const endPos = target.selectionEnd;
+        target.value = target.value.substring(0, startPos) + cleanedText + target.value.substring(endPos);
+
+        // Устанавливаем курсор на правильную позицию
+        target.selectionStart = target.selectionEnd = startPos + cleanedText.length;
+    }
+
+    // Делегирование события paste для всех полей с названием блюд
+    document.addEventListener('paste', function (event) {
+        if (event.target.matches('input[id^="id_dish_name_"], input[id^="id_new_dish_name_"]')) {
+            handlePaste(event);
+        }
+    });
+});
+</script>
+>>>>>>> Stashed changes
 {% endblock %}

@@ -36,7 +36,7 @@
                             <label for="id_dish_name_{{ forloop.counter0 }}" class="form-label">Название блюда {{
                                 forloop.counter }}:</label>
                             <input type="text" name="dish_name_{{ forloop.counter0 }}"
-                                id="id_dish_name_{{ forloop.counter0 }}" class="form-control" value="{{ dish.name }}"
+                                id="id_dish_name_{{ forloop.counter0 }}" class="form-control dish-name" value="{{ dish.name }}"
                                 placeholder="Введите название блюда" required>
                         </div>
                         <div class="col-md-4">
@@ -68,6 +68,103 @@
 </div>
 
 <!-- JavaScript -->
+<<<<<<< Updated upstream
 {{ dishes|json_script:"dishes-data" }}
 <script src="{% static 'orders/js/orders.js' %}"></script>
+=======
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const addDishButton = document.getElementById('add-dish');
+        const newDishesContainer = document.getElementById('new-dishes');
+        const dishesContainer = document.getElementById('dishes');
+    
+        if (addDishButton && newDishesContainer) {
+            let newDishIndex = 0;
+    
+            // Функция для валидации названия блюда
+            function validateDishName(input) {
+                const regex = /^[^\d]*$/; // Регулярное выражение, которое запрещает цифры
+                if (!regex.test(input.value)) {
+                    input.setCustomValidity('Название блюда не должно содержать цифр.');
+                } else {
+                    input.setCustomValidity('');
+                }
+            }
+    
+            // Функция для ограничения ввода только букв и специальных клавиш
+            function restrictInputToLetters(event) {
+                const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'];
+                if (allowedKeys.includes(event.key)) {
+                    return;
+                }
+                if (!/[a-zA-Zа-яА-Я]/.test(event.key)) {
+                    event.preventDefault();
+                }
+            }
+    
+            // Обработчик для добавления нового блюда
+            addDishButton.addEventListener('click', function () {
+                const newDishHTML = `
+                    <div class="dish card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="id_new_dish_name_${newDishIndex}" class="form-label">
+                                        Название блюда:
+                                    </label>
+                                    <input type="text" name="new_dish_name_${newDishIndex}" id="id_new_dish_name_${newDishIndex}"
+                                        class="form-control dish-name" placeholder="Введите название блюда" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="id_new_dish_price_${newDishIndex}" class="form-label">
+                                        Цена:
+                                    </label>
+                                    <input type="number" name="new_dish_price_${newDishIndex}" id="id_new_dish_price_${newDishIndex}"
+                                        class="form-control" step="0.01" placeholder="Введите цену" required>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-danger remove-new-dish">
+                                        <i class="fas fa-trash"></i> Удалить
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+    
+                newDishesContainer.insertAdjacentHTML('beforeend', newDishHTML);
+                const newDishNameInput = document.getElementById(`id_new_dish_name_${newDishIndex}`);
+                newDishNameInput.addEventListener('input', function () {
+                    validateDishName(this);
+                });
+                newDishNameInput.addEventListener('keydown', restrictInputToLetters);
+                newDishIndex++;
+            });
+    
+            // Обработчик для удаления новых блюд
+            newDishesContainer.addEventListener('click', function (event) {
+                if (event.target.classList.contains('remove-new-dish')) {
+                    const dishElement = event.target.closest('.dish');
+                    if (dishElement) {
+                        dishElement.remove();
+                    }
+                }
+            });
+        } else {
+            console.error('Элементы add-dish или new-dishes не найдены.');
+        }
+    
+        // Валидация существующих блюд
+        if (dishesContainer) {
+            const dishNameInputs = dishesContainer.querySelectorAll('.dish-name');
+            dishNameInputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    validateDishName(this);
+                });
+                input.addEventListener('keydown', restrictInputToLetters);
+            });
+        }
+    });
+</script>
+>>>>>>> Stashed changes
 {% endblock %}

@@ -146,3 +146,33 @@ class OrderService:
         paid_orders = Order.objects.filter(status='paid')
         total_revenue = sum(order.total_price for order in paid_orders)
         return render(request, 'orders/revenue.html', {'total_revenue': total_revenue})
+<<<<<<< Updated upstream
+=======
+
+    def worker_login_request(request):
+        """
+        Обрабатывает запросы для авторизации работника.
+        """
+        if request.method == 'POST':
+            form = WorkerLoginForm(request.POST)
+            if form.is_valid():
+                identifier = form.cleaned_data['identifier']
+                password = form.cleaned_data['password']
+
+                try:
+                    worker = Worker.objects.get(identifier=identifier)
+                    if worker.check_password(password):
+                        # Сохраняем идентификатор работника в сессии
+                        request.session['worker_id'] = worker.id
+                        request.session['worker_identifier'] = worker.identifier 
+                        messages.success(request, "Вы успешно авторизовались!")
+                        return redirect('orders:order_list')  # Используем именованный URL-адрес
+                    else:
+                        messages.error(request, "Неверный пароль.")
+                except Worker.DoesNotExist:
+                    messages.error(request, "Работник с таким идентификатором не найден.")
+        else:
+            form = WorkerLoginForm()
+
+        return render(request, 'workers/login.html', {'form': form})
+>>>>>>> Stashed changes

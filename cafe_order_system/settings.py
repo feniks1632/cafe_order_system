@@ -138,4 +138,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # Разрешить отправку кук
+<<<<<<< Updated upstream
 CORS_ALLOW_CREDENTIALS = True
+=======
+CORS_ALLOW_CREDENTIALS = True
+>>>>>>> Stashed changes

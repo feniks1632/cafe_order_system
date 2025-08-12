@@ -1,5 +1,8 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+from orders.tasks import notify_admin_worker_login 
+from django.core.cache import cache
+from django.utils import timezone
 
 from .forms import OrderForm, OrderSearchForm, WorkerLoginForm
 from .models import Order, Worker
@@ -231,7 +234,19 @@ class WorkerOrderService(OrderService):
                     if worker.check_password(password):
                         # Сохраняем идентификатор работника в сессии
                         request.session['worker_id'] = worker.id
-                        request.session['worker_identifier'] = worker.identifier 
+                        request.session['worker_identifier'] = worker.identifier
+                        
+                        ip = WorkerOrderService.get_client_ip(request)
+                        timestamp = timezone.now().strftime("%d.%m.%Y %H:%M:%S")
+                        
+                        cache_key = f"login_notify_{worker.id}"
+                        if not cache.get(cache_key):
+                            notify_admin_worker_login.delay(
+                                worker_identifier=identifier,
+                                timestamp=timestamp,
+                                ip_address=ip
+                            )
+                            cache.set(cache_key, True, 60 * 5)  # 5 минут 
                         messages.success(request, "Вы успешно авторизовались!")
                         return redirect('orders:order_list')  # Используем именованный URL-адрес
                     else:
@@ -242,3 +257,13 @@ class WorkerOrderService(OrderService):
             form = WorkerLoginForm()
 
         return render(request, 'workers/login.html', {'form': form})
+
+
+    @staticmethod
+    def get_client_ip(request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip

@@ -17,6 +17,16 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default_key')
 # При Разработки - True, при Деплое - False
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'feniks1632@gmail.com'
+EMAIL_HOST_PASSWORD = 'rwtj bjnt twhl yryy'  # пароль приложения!
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Админ, которому приходят уведомления
+ADMIN_EMAIL = 'feniks1632@gmail.com'
 
 # Разрешенные хосты
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split()
@@ -113,7 +123,7 @@ USE_TZ = True
 
 
 # Все для статики
-STATIC_URL = 'static/' # URL-адрес для доступа к статическим файлам
+STATIC_URL = 'static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Корневая папка для статических файлов
 
@@ -140,3 +150,16 @@ CORS_ALLOWED_ORIGINS = [
 # Разрешить отправку кук
 CORS_ALLOW_CREDENTIALS = True
 
+
+# Настройки Celery
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'  # RabbitMQ
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'         # Redis для хранения результатов
+
+# Опционально: сериализация
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TIMEZONE = 'Europe/Moscow'  
+
+# Включить обработку периодических задач
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'

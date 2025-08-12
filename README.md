@@ -5,7 +5,7 @@
 [![Django REST Framework](https://img.shields.io/badge/-Django%20REST%20Framework-464646?style=flat-square&logo=Django%20REST%20Framework)](https://www.django-rest-framework.org/)
 [![JavaScript](https://img.shields.io/badge/-JavaScript-464646?style=flat-square&logo=JavaScript)](https://learn.javascript.ru/)
 [![Bootstrap](https://img.shields.io/badge/-Bootstrap-464646?style=flat-square&logo=Bootstrap)](https://getbootstrap.com/)
-[![Celery](https://img.shields.io/badge/-Celery-464646?style=flat-square&logo=Celery)](https://docs.celeryq.dev/en/stable/django/index.html/)
+[![Celery](https://img.shields.io/badge/-Celery-464646?style=flat-square&logo=Celery)](https://docs.celeryq.dev/en/stable/django/index.html)
 [![RabbitMQ](https://img.shields.io/badge/-RabbitMQ-464646?style=flat-square&logo=RabbitMQ)](https://www.rabbitmq.com/)
 [![Redis](https://img.shields.io/badge/-Redis-464646?style=flat-square&logo=Redis)](https://master--redis-doc.netlify.app/docs//)
 
